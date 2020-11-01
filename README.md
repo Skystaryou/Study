@@ -1,1 +1,1 @@
-# This is a repository for the codes of homework.
+# This is a repository for the codes of homework and study.
