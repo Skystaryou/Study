@@ -1,4 +1,3 @@
-import mpi4py
 from mpi4py import MPI
 import numpy as np
 import time
