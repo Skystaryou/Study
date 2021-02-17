@@ -257,11 +257,11 @@ if __name__ == "__main__":
         for i in range(v_h.mesh.n_s):
             h_i = v_h.mesh.p[i + 1] - v_h.mesh.p[i]
             integrate_f_d_d = integrate.quad(f_dif2, v_h.mesh.p[i], v_h.mesh.p[i + 1])[0]
-            right = right + (h_i*h_i*h_i*h_i) * integrate_f_d_d
+            right = right + (h_i * h_i * h_i * h_i) * integrate_f_d_d
 
         if not right == 0:
             result_h.append(h)
-            result.append(l2_left_2/right)
+            result.append(l2_left_2 / right)
 
     plt.axes(xscale="log")
     plt.plot(result_h, result)

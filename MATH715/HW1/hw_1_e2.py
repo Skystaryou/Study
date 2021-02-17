@@ -129,32 +129,6 @@ def source_assembler(v_h, f, u_dirichlet, sigma):
     # computing the load vector (use the function above)
     b = load_vector(v_h, f)
 
-    # extract the interval index for left boundary
-    left_index = v_h.mesh.bc[0]
-
-    # compute the lenght of the interval
-    left_interval_length = v_h.mesh.p[left_index + 1] - v_h.mesh.p[left_index]
-
-    # sample sigma at the middle point
-    x_mid = (v_h.mesh.p[left_index + 1] + v_h.mesh.p[left_index]) / 2
-    sigma_mid = sigma(x_mid)
-
-    # update the source_vector
-    b[left_index + 1] = b[left_index + 1] - sigma_mid * u_dirichlet[0] / left_interval_length
-
-    # extract the interval index for the right boudanry
-    right_index = v_h.mesh.bc[1]
-
-    # compute the length of the interval
-    right_interval_length = v_h.mesh.p[right_index] - v_h.mesh.p[right_index - 1]
-
-    # sample sigma at the middle point
-    x_mid = (v_h.mesh.p[right_index] + v_h.mesh.p[right_index - 1]) / 2
-    sigma_mid = sigma(x_mid)
-
-    # update the source_vector
-    b[right_index - 1] = b[right_index - 1] - sigma_mid * u_dirichlet[1] / right_interval_length
-
     # return only the interior nodes
     return b[1:-1]
 
@@ -173,8 +147,13 @@ def solve_poisson_dirichelet(v_h, f, sigma,
     # we compute the stiffness matrix, we only use the
     # the interior dof, and we need to convert it to
     # a csc_matrix
+    A = mass_matrix(v_h)
+    A = A[[i for i in range(1, v_h.dim - 1)], :][:, [i for i in range(1, v_h.dim - 1)]]
     S = stiffness_matrix(v_h, sigma)
     S = S[[i for i in range(1, v_h.dim - 1)], :][:, [i for i in range(1, v_h.dim - 1)]]
+    for i in range(S.shape[0]):
+        for j in range(S.shape[1]):
+            S[i, j] = A[i, j] + S[i, j]
     S = S.tocsc()
 
     # we build the source
@@ -210,6 +189,20 @@ def pi_h(v_h, f):
     return pi_h_f
 
 
+def pi_h_d(u_h, v_h, x):
+    index = 0
+
+    if x == v_h.mesh.p[-1]:
+        index = v_h.mesh.n_s - 1
+    else:
+        for i in range(v_h.mesh.n_s):
+            if v_h.mesh.p[i] <= x < v_h.mesh.p[i + 1]:
+                index = i
+                break
+
+    return (u_h(v_h.mesh.p[index + 1]) - u_h(v_h.mesh.p[index])) / (v_h.mesh.p[index + 1] - v_h.mesh.p[index])
+
+
 def p_h(v_h, f):
     """projection function
       input:  v_h   function space
@@ -239,57 +232,43 @@ if __name__ == "__main__":
     to you to help you debug your code. 
     """
 
-    x = np.linspace(0, 1, 11)
-
-    mesh = Mesh(x)
-    v_h = V_h(mesh)
-
-    f_load = lambda x: 2 + 0 * x
-    xi = f_load(x)  # linear function
-
-    u = Function(xi, v_h)
-    assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
-    # check if this is projection
-    ph_f = p_h(v_h, f_load)
-    ph_f2 = p_h(v_h, ph_f)
-    assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
     # using analytical solution
-    u = lambda x: np.sin(4 * np.pi * x)
+    u = lambda x: x ** 2 - x
+    u_d = lambda x: 2 * x - 1
+
     # building the correct source file
-    f = lambda x: (4 * np.pi) ** 2 * np.sin(4 * np.pi * x)
+    f = lambda x: x ** 2 - x - 2
     # conductivity is constant
     sigma = lambda x: 1 + 0 * x
 
-    u_sol = solve_poisson_dirichelet(v_h, f, sigma)
-    u_plot = [u_sol(x[i]) for i in range(len(x))]
-    plt.plot(u_plot)
-    plt.title(str(len(x)) + " points")
+    result_h = []
+    result = []
+    for n in range(11, 301):
+        print(n)
+        h = 1 / (n - 1)
+        x = np.linspace(0, 1, n)
+        mesh = Mesh(x)
+        v_h = V_h(mesh)
+
+        u_h_d = lambda x: pi_h_d(pi_h(v_h, u), v_h, x)
+        left = lambda x: np.square(u_d(x) - u_h_d(x))
+        l2_left_2 = integrate.quad(left, 0.0, 1.)[0]
+
+        u_1 = lambda x: np.square(f(x))
+        u_2 = lambda x: np.square(u_d(x))
+
+        right = 0
+        for i in range(v_h.mesh.n_s):
+            h_i = v_h.mesh.p[i + 1] - v_h.mesh.p[i]
+            integrate_1 = integrate.quad(u_1, v_h.mesh.p[i], v_h.mesh.p[i + 1])[0]
+            integrate_2 = integrate.quad(u_2, v_h.mesh.p[i], v_h.mesh.p[i + 1])[0]
+            right = right + (h_i * h_i) * (integrate_1 + integrate_2)
+
+        if not right == 0:
+            result_h.append(h)
+            result.append(l2_left_2 / right)
+
+    plt.axes(xscale="log")
+    plt.plot(result_h, result)
     plt.show()
     plt.close()
-
-    err = lambda x: np.square(u_sol(x) - u(x))
-    # we use an fearly accurate quadrature
-    l2_err = np.sqrt(integrate.quad(err, 0.0, 1.)[0])
-
-    print("L^2 error using %d points is %.6f" % (v_h.dim, l2_err))
-    # this should be quite large
-
-    # define a finer partition
-    x = np.linspace(0, 1, 101)
-    # init mesh and fucntion space
-    mesh = Mesh(x)
-    v_h = V_h(mesh)
-
-    u_sol = solve_poisson_dirichelet(v_h, f, sigma)
-    u_plot = [u_sol(x[i]) for i in range(len(x))]
-    plt.plot(u_plot)
-    plt.title(str(len(x)) + " points")
-    plt.show()
-    plt.close()
-
-    err = lambda x: np.square(u_sol(x) - u(x))
-    # we use an fearly accurate quadrature
-    l2_err = np.sqrt(integrate.quad(err, 0.0, 1.)[0])
-
-    # print the error
-    print("L^2 error using %d points is %.6f" % (v_h.dim, l2_err))

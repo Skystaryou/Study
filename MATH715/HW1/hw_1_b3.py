@@ -221,7 +221,7 @@ def pi_h_d(u_h, v_h, x):
                 index = i
                 break
 
-    return (u_h(v_h.mesh.p[index+1])-u_h(v_h.mesh.p[index]))/(v_h.mesh.p[index+1]-v_h.mesh.p[index])
+    return (u_h(v_h.mesh.p[index + 1]) - u_h(v_h.mesh.p[index])) / (v_h.mesh.p[index + 1] - v_h.mesh.p[index])
 
 
 def p_h(v_h, f):
@@ -262,7 +262,7 @@ if __name__ == "__main__":
         mesh = Mesh(x)
         v_h = V_h(mesh)
 
-        f = lambda x: 0.5*k*x*x
+        f = lambda x: 0.5 * k * x * x
         f_dif2 = lambda x: k + 0 * x
         f_ph = p_h(v_h, f)
         left = lambda x: np.square(f(x) - f_ph(x))

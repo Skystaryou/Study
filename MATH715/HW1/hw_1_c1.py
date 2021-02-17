@@ -267,7 +267,7 @@ if __name__ == "__main__":
         v_h = V_h(mesh)
 
         u_h_d = lambda x: pi_h_d(pi_h(v_h, u), v_h, x)
-        left = lambda x: np.square(u_d(x)-u_h_d(x))
+        left = lambda x: np.square(u_d(x) - u_h_d(x))
         l2_left_2 = integrate.quad(left, 0.0, 1.)[0]
 
         right = 0

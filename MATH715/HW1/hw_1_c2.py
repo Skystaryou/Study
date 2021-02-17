@@ -239,26 +239,18 @@ if __name__ == "__main__":
     to you to help you debug your code. 
     """
 
-    x = np.linspace(0, 1, 11)
-
-    mesh = Mesh(x)
-    v_h = V_h(mesh)
-
-    f_load = lambda x: 2 + 0 * x
-    xi = f_load(x)  # linear function
-
-    u = Function(xi, v_h)
-    assert np.abs(u(x[5]) - f_load(x[5])) < 1.e-6
-    # check if this is projection
-    ph_f = p_h(v_h, f_load)
-    ph_f2 = p_h(v_h, ph_f)
-    assert np.max(ph_f.xi - ph_f2.xi) < 1.e-6
     # using analytical solution
-    u = lambda x: np.sin(4 * np.pi * x)
+    # u = lambda x: np.sin(4 * np.pi * x)
     # building the correct source file
-    f = lambda x: (4 * np.pi) ** 2 * np.sin(4 * np.pi * x)
+    f = lambda x: np.exp(-1 * (x - 0.5) * (x - 0.5) / (2 * 0.01))
     # conductivity is constant
     sigma = lambda x: 1 + 0 * x
+
+    # regular mesh
+    n = 10001
+    x = np.linspace(0, 1, n)
+    mesh = Mesh(x)
+    v_h = V_h(mesh)
 
     u_sol = solve_poisson_dirichelet(v_h, f, sigma)
     u_plot = [u_sol(x[i]) for i in range(len(x))]
@@ -267,6 +259,91 @@ if __name__ == "__main__":
     plt.show()
     plt.close()
 
+    start = 0
+    list_n = []
+    list_err = []
+
+    for i in [9848, 9849]:
+        x = np.linspace(0, 1, i)
+        mesh = Mesh(x)
+        v_h = V_h(mesh)
+        u_temp_sol = solve_poisson_dirichelet(v_h, f, sigma)
+        err = lambda x: np.square(u_temp_sol(x) - u_sol(x))
+        l2_err = np.sqrt(integrate.quad(err, 0.0, 1.)[0])
+        print(str(i) + " " + str(l2_err))
+
+        if l2_err <= 1e-3 and start == 0:
+            start = i
+
+        list_n.append(i)
+        list_err.append(l2_err)
+
+    print("from " + str(start))
+
+    plt.plot(list_n, list_err)
+    plt.show()
+    plt.close()
+
+    x = np.linspace(0, 1, 11)
+    n = 11
+    while n < 10001:
+        n = len(x)
+
+        eta = [0 for i in range(n)]
+        for i in range(n - 1):
+            h = x[i + 1] - x[i]
+            a = f(x[i])
+            b = f(x[i + 1])
+            t = (a ** 2 + b ** 2) * h / 2
+            eta[i] = h * np.sqrt(t)
+
+        alpha = 0.9
+        for i in range(len(eta)):
+            if eta[i] > alpha * np.max(np.array(eta)):
+                x = np.append(x, (x[i + 1] + x[i]) / 2)
+        x = np.sort(x)
+
+        n = len(x)
+
+    mesh = Mesh(x)
+    v_h = V_h(mesh)
+    u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+
+    x = np.linspace(0, 1, 11)
+    n = 11
+    max_n = 9501
+    while n < max_n:
+        n = len(x)
+
+        eta = [0 for i in range(n)]
+        for i in range(n - 1):
+            h = x[i + 1] - x[i]
+            a = f(x[i])
+            b = f(x[i + 1])
+            t = (a ** 2 + b ** 2) * h / 2
+            eta[i] = h * np.sqrt(t)
+
+        alpha = 0.9
+        for i in range(len(eta)):
+            if eta[i] > alpha * np.max(np.array(eta)):
+                x = np.append(x, (x[i + 1] + x[i]) / 2)
+            if len(x) >= max_n:
+                break
+        x = np.sort(x)
+
+        n = len(x)
+
+    mesh = Mesh(x)
+    v_h = V_h(mesh)
+    u_temp_sol = solve_poisson_dirichelet(v_h, f, sigma)
+
+    err = lambda x: np.square(u_temp_sol(x) - u_sol(x))
+    l2_err = np.sqrt(integrate.quad(err, 0.0, 1.)[0])
+
+    print("from " + str(n))
+    print(str(n) + " " + str(l2_err))
+
+'''
     err = lambda x: np.square(u_sol(x) - u(x))
     # we use an fearly accurate quadrature
     l2_err = np.sqrt(integrate.quad(err, 0.0, 1.)[0])
@@ -283,7 +360,7 @@ if __name__ == "__main__":
     u_sol = solve_poisson_dirichelet(v_h, f, sigma)
     u_plot = [u_sol(x[i]) for i in range(len(x))]
     plt.plot(u_plot)
-    plt.title(str(len(x)) + " points")
+    plt.title(str(len(x))+" points")
     plt.show()
     plt.close()
 
@@ -293,3 +370,5 @@ if __name__ == "__main__":
 
     # print the error
     print("L^2 error using %d points is %.6f" % (v_h.dim, l2_err))
+
+'''
