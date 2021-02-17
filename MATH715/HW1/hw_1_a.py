@@ -40,10 +40,13 @@ class V_h:
 
         # compute the index of the interval in which x is contained
         index_interval = 0
-        for i in range(self.mesh.n_s):
-            if self.mesh.s[i][0] <= x <= self.mesh.s[i][1]:
-                index_interval = i
-                break
+        if abs(x-self.mesh.p[-1])<1e-9:
+            index_interval = self.mesh.n_s-1
+        else:
+            for i in range(self.mesh.n_s):
+                if self.mesh.p[self.mesh.s[i][0]] <= x < self.mesh.p[self.mesh.s[i][1]]:
+                    index_interval = i
+                    break
 
         # compute the size of the interval
         length_interval = self.mesh.p[self.mesh.s[index_interval][1]] - self.mesh.p[self.mesh.s[index_interval][0]]
@@ -255,6 +258,11 @@ if __name__ == "__main__":
     sigma = lambda x: 1 + 0 * x
 
     u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+    u_plot = [u_sol(x[i]) for i in range(len(x))]
+    plt.plot(u_plot)
+    plt.title(str(len(x))+" points")
+    plt.show()
+    plt.close()
 
     err = lambda x: np.square(u_sol(x) - u(x))
     # we use an fearly accurate quadrature
@@ -270,6 +278,11 @@ if __name__ == "__main__":
     v_h = V_h(mesh)
 
     u_sol = solve_poisson_dirichelet(v_h, f, sigma)
+    u_plot = [u_sol(x[i]) for i in range(len(x))]
+    plt.plot(u_plot)
+    plt.title(str(len(x))+" points")
+    plt.show()
+    plt.close()
 
     err = lambda x: np.square(u_sol(x) - u(x))
     # we use an fearly accurate quadrature
