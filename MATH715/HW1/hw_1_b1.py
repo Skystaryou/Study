@@ -242,6 +242,7 @@ if __name__ == "__main__":
     result = []
 
     for n in range(11, 5000):
+        print(str(n) + " of "+str(4999))
         h = 1 / n
         x = np.linspace(0, 1, n)
         mesh = Mesh(x)

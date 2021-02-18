@@ -241,8 +241,8 @@ if __name__ == "__main__":
     result_k = []
     result = []
     n = 1001
-    for k in range(1, 30):
-        print(k)
+    for k in range(1, 29):
+        print(str(k)+" of "+str(30))
         h = 1 / (n - 1)
         x = np.linspace(0, 1, n)
         mesh = Mesh(x)

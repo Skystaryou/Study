@@ -244,7 +244,7 @@ if __name__ == "__main__":
     result_h = []
     result = []
     for n in range(11, 301):
-        print(n)
+        print(str(n)+" of 300")
         h = 1 / (n - 1)
         x = np.linspace(0, 1, n)
         mesh = Mesh(x)
