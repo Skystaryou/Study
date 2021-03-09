@@ -34,7 +34,6 @@ V_h = FunctionSpace(mesh, 'P', 2)
 # define overal expression
 u_D = Expression('1 - x[0]*x[0] - x[1]*x[1]', degree=3)
 
-
 # define where the expression will be evaluated
 def boundary(x, on_boundary):
     return on_boundary
