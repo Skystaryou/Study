@@ -152,7 +152,7 @@ for n in range(8, 100):
     # Compute error in L2 norm
     error_L2 = errornorm(u_D, u_h, 'L2')
     list_h.append(math.log(1 / n))
-    list_l2_err.append(error_L2)
+    list_l2_err.append(math.log(error_L2))
 
 plt.plot(list_h, list_l2_err)
 plt.xlabel("log(h)")
@@ -211,7 +211,7 @@ for n in range(8, 100):
     # Compute error in L2 norm
     error_L2 = errornorm(u_D, u_h, 'L2')
     list_h_2.append(math.log(1 / n))
-    list_l2_err_2.append(error_L2)
+    list_l2_err_2.append(math.log(error_L2))
 
 plt.plot(list_h, list_l2_err)
 plt.plot(list_h_2, list_l2_err_2)
@@ -221,5 +221,6 @@ plt.title("using ")
 plt.legend(['linear', 'quadrature'])
 plt.show()
 plt.close
+print(list_l2_err_2)
 
 print("The third figure is the comparison of the error of linear and quadratic polynomials.")
