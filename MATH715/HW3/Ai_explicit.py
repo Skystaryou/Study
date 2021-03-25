@@ -28,11 +28,10 @@ domain = camera2 + channel1 + channel2 + camera1
 mesh = generate_mesh(domain, 64)
 
 # Define function spae
-V_h = FunctionSpace(mesh, 'P', 1)
+V_h = FunctionSpace(mesh, 'P', 2)
 
 # time stepping
-delta_t = 0.02
-
+delta_t = 0.005
 #############################################
 # Define boundary conditions
 #############################################
@@ -83,10 +82,9 @@ u_n = interpolate(du_0dt, V_h)
 u_n.assign(u_n * delta_t + u_n_1)
 
 # define the bilinear form
-var_form = u * v * dx + (0.5 * delta_t * delta_t * dot(nabla_grad(u), nabla_grad(v)) * dx) \
-           - (2 * u_n * v * dx) - (-1 * u_n_1 * v * dx) \
-           - (-0.5 * delta_t * delta_t * dot(nabla_grad(u_n_1), nabla_grad(v)) * dx) \
-           - (delta_t * delta_t * f * v * dx)
+var_form = u * v * dx - 2 * u_n * v * dx - (-1 * u_n_1 * v * dx) - \
+           (-1) * (delta_t * delta_t) * dot(nabla_grad(u_n), nabla_grad(v)) * dx - \
+           (delta_t * delta_t) * f * v * dx
 
 # split the variotonal formulation into bilinar and linear forms
 # the bilinear goes to the lhs and the linear to rhs
@@ -107,7 +105,7 @@ bc.apply(A)
 
 t = 0
 
-num_steps = 400
+num_steps = 1200
 
 # boolean to control the plotting
 # turn it False when timing your solutions
@@ -149,6 +147,7 @@ for n in range(num_steps):
         plt.draw()
         plt.pause(0.0001)
         plt.clf()
+        break
 
 end = time.time()
 print('delta_t = ' + str(delta_t))

@@ -105,7 +105,7 @@ bc.apply(A)
 
 t = 0
 
-num_steps = 800
+num_steps = 400
 
 # boolean to control the plotting
 # turn it False when timing your solutions
@@ -113,7 +113,7 @@ plot_bool = False  # or False
 
 start = time.time()
 for n in range(num_steps):
-    tt = (n+2) * delta_t
+    tt = (n + 2) * delta_t
     print(tt)
 
     # Update current time
@@ -136,7 +136,7 @@ for n in range(num_steps):
     u_n_1.assign(u_n)
     u_n.assign(u_)
 
-    if abs(tt-5)<1e-5:
+    if abs(tt - 5) < 1e-5:
         plot_bool = True
     else:
         plot_bool = False
@@ -147,8 +147,7 @@ for n in range(num_steps):
         plt.draw()
         plt.pause(0.0001)
         plt.clf()
-        break
 
 end = time.time()
-print('delta_t = '+str(delta_t))
+print('delta_t = ' + str(delta_t))
 print("average runtime is %.4e" % ((end - start) / num_steps))

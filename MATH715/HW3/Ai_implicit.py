@@ -28,7 +28,7 @@ domain = camera2 + channel1 + channel2 + camera1
 mesh = generate_mesh(domain, 64)
 
 # Define function spae
-V_h = FunctionSpace(mesh, 'P', 1)
+V_h = FunctionSpace(mesh, 'P', 2)
 
 # time stepping
 delta_t = 0.02
@@ -107,7 +107,7 @@ bc.apply(A)
 
 t = 0
 
-num_steps = 400
+num_steps = 1200
 
 # boolean to control the plotting
 # turn it False when timing your solutions
@@ -149,6 +149,7 @@ for n in range(num_steps):
         plt.draw()
         plt.pause(0.0001)
         plt.clf()
+        break
 
 end = time.time()
 print('delta_t = ' + str(delta_t))
