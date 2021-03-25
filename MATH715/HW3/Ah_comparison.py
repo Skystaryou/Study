@@ -91,7 +91,7 @@ def implicit_average_cost_normal(delta_t):
 
     t = 0
 
-    num_steps = 1200
+    num_steps = 400
 
     # boolean to control the plotting
     # turn it False when timing your solutions
@@ -122,17 +122,9 @@ def implicit_average_cost_normal(delta_t):
         u_n_1.assign(u_n)
         u_n.assign(u_)
 
-        if abs(tt - 5) < 1e-5:
-            plot_bool = True
-        else:
-            plot_bool = False
-
-        if plot_bool:
-            final_steps = n + 1
-            break
 
     end = time.time()
-    return (end - start) / final_steps, end - start
+    return (end - start) / num_steps, end - start
 
 
 def implicit_average_cost_preconditioner(delta_t):
@@ -186,13 +178,12 @@ def implicit_average_cost_preconditioner(delta_t):
 
     t = 0
 
-    num_steps = 1200
+    num_steps = 400
 
     # boolean to control the plotting
     # turn it False when timing your solutions
     plot_bool = False  # or False
 
-    final_steps = 0
     start = time.time()
     for n in range(num_steps):
         tt = (n + 2) * delta_t
@@ -217,17 +208,9 @@ def implicit_average_cost_preconditioner(delta_t):
         u_n_1.assign(u_n)
         u_n.assign(u_)
 
-        if abs(tt - 5) < 1e-5:
-            plot_bool = True
-        else:
-            plot_bool = False
-
-        if plot_bool:
-            final_steps = n + 1
-            break
 
     end = time.time()
-    return (end - start) / final_steps, end - start
+    return (end - start) / num_steps, end - start
 
 
 def implicit_average_cost_matrix_before_hand(delta_t):
@@ -281,13 +264,12 @@ def implicit_average_cost_matrix_before_hand(delta_t):
 
     t = 0
 
-    num_steps = 1200
+    num_steps = 400
 
     # boolean to control the plotting
     # turn it False when timing your solutions
     plot_bool = False  # or False
 
-    final_steps = 0
     start = time.time()
     for n in range(num_steps):
         tt = (n + 2) * delta_t
@@ -312,17 +294,9 @@ def implicit_average_cost_matrix_before_hand(delta_t):
         u_n_1.assign(u_n)
         u_n.assign(u_)
 
-        if abs(tt - 5) < 1e-5:
-            plot_bool = True
-        else:
-            plot_bool = False
-
-        if plot_bool:
-            final_steps = n + 1
-            break
 
     end = time.time()
-    return (end - start) / final_steps, end - start
+    return (end - start) / num_steps, end - start
 
 
 delta_t_list = [0.005, 0.01, 0.02, 0.025, 0.04, 0.05, 0.1, 0.2, 0.4]
