@@ -1,0 +1,12 @@
+README.md
+setup.py
+EIT.egg-info/PKG-INFO
+EIT.egg-info/SOURCES.txt
+EIT.egg-info/dependency_links.txt
+EIT.egg-info/requires.txt
+EIT.egg-info/top_level.txt
+eit/__init__.py
+eit/fem.py
+test/test_derivatives.py
+test/test_gradient.py
+test/test_mesh.py
