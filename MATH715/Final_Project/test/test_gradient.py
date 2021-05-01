@@ -6,6 +6,7 @@ import numpy as np
 import numpy.linalg as npla
 import scipy.sparse as spsp
 from scipy.sparse.linalg import spsolve
+import time
 
 import scipy.optimize as op
 
@@ -15,7 +16,7 @@ import sys
 from eit import *  
 
 # boolean for plotting 
-plot_bool = False
+plot_bool = True
 
 # loading the file containing the mesh
 mat_fname  = 'data/mesh_small.mat'
@@ -67,8 +68,9 @@ grad_ref = mat_contents['grad_ref']
 
 err_grad = grad-grad_ref.reshape((-1,))
 
+print(npla.norm(err_grad))
 assert npla.norm(err_grad) < 1.e-6
-print("Error with respect to the reference gradient is %.4e" % err_grad)
+# print("Error with respect to the reference gradient is %.4e" % err_grad)
 
 # otherwise you can use the check_grad function
 check_grad = False
@@ -87,6 +89,7 @@ if check_grad:
 
 	print(err)
 
+print("check finished")
 
 # simple optimization routine
 def J(x):
@@ -96,12 +99,14 @@ def J(x):
 # recall that this is the square of the misfit
 opt_tol = 1.e-6
 
+print("Begin optimization")
 # running the optimization routine
 res = op.minimize(J, sigma_vec_0, #method='L-BFGS-B',
                    jac = True,
                    options={'eps': opt_tol, 
                    			'maxiter': 500,
                    			'disp': True})
+print("Optimization finished")
 
 # extracting guess from the resulting optimization 
 sigma_guess = res.x
@@ -120,5 +125,20 @@ plt.triplot(triangulation, '-k')
 plt.tricontourf(triangulation, sigma_v)
 # plotting a colorbar
 plt.colorbar()
+plt.title("result of optimization (sigma)")
+# show
+plt.show()
+plt.close()
+
+# compare to the original one
+
+# plot the triangles
+plt.triplot(triangulation, '-k')
+# plotting the solution
+sigma_vec = spsolve(Mass, p_v_w@sigma_vec)
+plt.tricontourf(triangulation, sigma_vec)
+# plotting a colorbar
+plt.colorbar()
+plt.title("comparison")
 # show
 plt.show()

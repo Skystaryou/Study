@@ -3,6 +3,7 @@ import numpy.linalg as npla
 import scipy.sparse as spsp
 from scipy.sparse.linalg import spsolve
 import scipy.integrate as integrate
+import time
 
 
 class Mesh:
@@ -55,7 +56,7 @@ def stiffness_matrix(v_h, sigma_vec):
     # we define the arrays for the indicies and the values 
     idx_i = np.zeros((v_h.mesh.n_t, 9), dtype  = np.int)
     idx_j = np.zeros((v_h.mesh.n_t, 9), dtype  = np.int)
-    vals = np.zeros((v_h.mesh.n_t, 9), dtype  = np.float32)
+    vals = np.zeros((v_h.mesh.n_t, 9), dtype  = np.float64)
 
     # Assembly the matrix
     for e in range(v_h.mesh.n_t):  # integration over one triangular element at a time
@@ -112,7 +113,7 @@ def mass_matrix(v_h):
 
     idx_i = np.zeros((v_h.mesh.n_t, 9), dtype  = np.int)
     idx_j = np.zeros((v_h.mesh.n_t, 9), dtype  = np.int)
-    vals = np.zeros((v_h.mesh.n_t, 9), dtype  = np.float32)
+    vals = np.zeros((v_h.mesh.n_t, 9), dtype  = np.float64)
 
     # local mass matrix (so we don't need to compute it at each iteration)
     MK = 1/12*np.array([ [2., 1., 1.], 
@@ -168,7 +169,7 @@ def projection_v_w(v_h):
 
     idx_i = np.zeros((v_h.mesh.n_t, 3), dtype  = np.int)
     idx_j = np.zeros((v_h.mesh.n_t, 3), dtype  = np.int)
-    vals = np.zeros((v_h.mesh.n_t, 3), dtype  = np.float32)
+    vals = np.zeros((v_h.mesh.n_t, 3), dtype  = np.float64)
 
     # Assembly the matrix
     for e in range(v_h.mesh.n_t):  # integration over one triangular element at a time
@@ -188,9 +189,9 @@ def projection_v_w(v_h):
         idx_i[e,:] = nodes
         idx_j[e,:] = e*np.ones((3,))
         # uncomment and compute this one
-        vals[e,:] = (1/3) * Area * np.array([[1],
-                                             [1],
-                                             [1]])
+        vals[e,:] = (1/3) * Area * np.array([1,
+                                             1,
+                                             1])
 
     # we add all the indices to make the matrix
     M_coo = spsp.coo_matrix((vals.reshape((-1,)), 
@@ -223,9 +224,9 @@ def partial_deriv_matrix(v_h):
     # allocating the indices
     idx_i = np.zeros((v_h.mesh.n_t, 3), dtype  = np.int)
     idx_j = np.zeros((v_h.mesh.n_t, 3), dtype  = np.int)
-    vals_x = np.zeros((v_h.mesh.n_t, 3), dtype  = np.float32)
-    vals_y = np.zeros((v_h.mesh.n_t, 3), dtype  = np.float32)
-    vals_s = np.zeros((v_h.mesh.n_t, 1), dtype  = np.float32)
+    vals_x = np.zeros((v_h.mesh.n_t, 3), dtype  = np.float64)
+    vals_y = np.zeros((v_h.mesh.n_t, 3), dtype  = np.float64)
+    vals_s = np.zeros((v_h.mesh.n_t, 1), dtype  = np.float64)
 
     # Assembly the matrix
     for e in range(n_t):  #
@@ -241,8 +242,8 @@ def partial_deriv_matrix(v_h):
         s= (l1+l2+l3)/2
         Area = np.sqrt(s * (s-l1) * (s-l2) * (s-l3))
         # then compute local partial derivatives
-        Dx_loc = (np.array([y[1]-y[2], y[2]-y[0], y[0]-y[1]]))/(2)
-        Dy_loc = (np.array([x[2]-x[1], x[0]-x[2], x[1]-x[0]]))/(2)
+        Dx_loc = (np.array([y[1]-y[2], y[2]-y[0], y[0]-y[1]]))/2
+        Dy_loc = (np.array([x[2]-x[1], x[0]-x[2], x[1]-x[0]]))/2
 
 
         # uncomment here once the local partial derivatives 
@@ -264,7 +265,7 @@ def partial_deriv_matrix(v_h):
                              (idx_i.reshape((-1,)), 
                               idx_j.reshape((-1,)))), shape=(n_t, p.shape[0]))
 
-    surf = spsp.dia_matrix((vals_s.reshape((1,-1)), 
+    surf = spsp.dia_matrix((vals_s.reshape((1,-1)),
                             np.array([0])), shape=(n_t, n_t))
 
     return spsp.lil_matrix(Dx_coo), spsp.lil_matrix(Dy_coo), spsp.lil_matrix(surf)  
@@ -285,7 +286,7 @@ def dtn_map(v_h, sigma_vec):
     Sb = spsp.csr_matrix(S[vol_idx,:][:,vol_idx])
     
     # the boundary data are just direct deltas at each node
-    bdy_data = np.ones((len(bdy_idx),1))
+    bdy_data = np.identity(n_bdy_pts, dtype= np.float64)
     
     # building the rhs for the linear system
     Fb = -S[vol_idx,:][:,bdy_idx]*bdy_data
@@ -294,7 +295,7 @@ def dtn_map(v_h, sigma_vec):
     U_vol = spsolve(Sb, Fb)
     
     # allocate the space for the full solution
-    sol = np.zeros((n_pts,n_bdy_pts))
+    sol = np.zeros((n_pts, n_bdy_pts), dtype=np.float64)
     
     # write the corresponding values back to the solution
     # uncomment when ready
@@ -309,7 +310,7 @@ def dtn_map(v_h, sigma_vec):
 
     # uncomment when ready
     return DtN, sol
-    pass
+    #pass
 
 
 def adjoint(v_h, sigma_vec, residual):
@@ -329,6 +330,7 @@ def adjoint(v_h, sigma_vec, residual):
     
     # the boundary data are just direct deltas at each node
     bdy_data = residual
+    # bdy_data = np.identity(n_bdy_pts, dtype=np.float64)
     
     # building the rhs for the linear system
     Fb = -S[vol_idx,:][:,bdy_idx]*bdy_data
@@ -337,7 +339,7 @@ def adjoint(v_h, sigma_vec, residual):
     U_vol = spsolve(Sb, Fb)
     
     # allocate the space for the full solution
-    sol_adj = np.zeros((n_pts,n_bdy_pts))
+    sol_adj = np.zeros((n_pts,n_bdy_pts), dtype=np.float64)
     
     # write the corresponding values back to the sol_adjution
     # uncomment when ready
@@ -356,7 +358,7 @@ def misfit_sigma(v_h, Data, sigma_vec):
     # compute the residual
     residual  = -(Data - dtn)
 
-    # comput the adjoint fields
+    # compute the adjoint fields
     sol_adj = adjoint(v_h, sigma_vec, residual)
 
     # compute the derivative matrices (weakly)
@@ -369,15 +371,18 @@ def misfit_sigma(v_h, Data, sigma_vec):
     Sol_adj_x = spsolve(M_w,(Dx@sol_adj))
     Sol_adj_y = spsolve(M_w,(Dy@sol_adj))
 
+
     Sol_x = spsolve(M_w,(Dx@sol))
     Sol_y = spsolve(M_w,(Dy@sol))
 
     # uncomment when ready
-    # grad = np.sum()
+    grad_temp = Sol_x*Sol_adj_x + Sol_y*Sol_adj_y
+    grad = M_w@np.sum(grad_temp, axis = 1)
 
     # uncomment when ready
-    # return 0.5*np.sum(np.square(residual)), grad
+    # print(0.5*np.sum(np.square(residual)))
+    return 0.5*np.sum(np.square(residual)), grad
 
     # erase when ready
-    pass
+    # pass
 
