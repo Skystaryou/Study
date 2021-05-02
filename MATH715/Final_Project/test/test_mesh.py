@@ -9,6 +9,7 @@ import numpy as np
 import numpy.linalg as npla
 import scipy.sparse as spsp
 from scipy.sparse.linalg import spsolve
+import scikits.umfpack
 
 import os
 import sys
@@ -62,7 +63,8 @@ bdy_data = bdy_cond(bdy_points[:,0], bdy_points[:,1])
 Fb = -S[vol_idx,:][:,bdy_idx]*bdy_data
 
 # solve interior dof
-U_vol = spsolve(Sb, Fb)
+# U_vol = spsolve(Sb, Fb)
+U_vol = scikits.umfpack.spsolve(Sb, Fb)
 
 # allocate the space for the full solution
 sol = np.zeros((p.shape[0],))
